@@ -30,9 +30,9 @@ pipeline {
             steps {
                 echo 'Test stage...'
                 sh '''
-                    ls -la
+                    test -f build/index.html || (echo "build/index.html not found" && exit 1)
+                    echo "build/index.html exists"
                     ls -l build/index.html
-                    npm ci
                     npm test
                 '''
             }
