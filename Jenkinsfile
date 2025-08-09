@@ -21,22 +21,6 @@ pipeline {
             }
         }
         
-        stage('Run Tests') {
-            agent {
-                docker {
-                    image 'node:18-alpine' // Use Node.js 18 Alpine image
-                    reuseNode true // Reuse the node for subsequent stages
-                }
-            }
-            steps {
-                echo 'Running tests...'
-                sh '''
-                    npm run test:ci
-                    ls -la jest-results
-                '''
-            }
-        }
-
         stage('Test') {
             agent {
                 docker {
