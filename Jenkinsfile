@@ -20,40 +20,46 @@ pipeline {
                 '''
             }
         }
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node:18-alpine' // Use Node.js 18 Alpine image
-                    reuseNode true // Reuse the node for subsequent stages
+
+        stage('Tests') {
+            parrallel {
+                stage('Unit Tests') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine' // Use Node.js 18 Alpine image
+                            reuseNode true // Reuse the node for subsequent stages
+                        }
+                    }
+                    steps {
+                        echo 'Test stage...'
+                        sh '''
+                            test -f build/index.html || (echo "build/index.html not found" && exit 1)
+                            echo "build/index.html exists"
+                            ls -l build/index.html
+                            npm test
+                        '''
+                    }
                 }
-            }
-            steps {
-                echo 'Test stage...'
-                sh '''
-                    test -f build/index.html || (echo "build/index.html not found" && exit 1)
-                    echo "build/index.html exists"
-                    ls -l build/index.html
-                    npm test
-                '''
+
+                stage('End-to-End Test') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy' // Use Playwright image
+                            reuseNode true // Reuse the node for subsequent stages
+                        }
+                    }
+                    steps {
+                        echo 'Test stage...'
+                        sh '''
+                            npm install serve
+                            node_modules/.bin/serve -s build & sleep 10
+                            npx playwright test --config=playwright.config.js --reporter=html
+                        '''
+                    }
+                }
             }
         }
 
-        stage('End-to-End Test') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy' // Use Playwright image
-                    reuseNode true // Reuse the node for subsequent stages
-                }
-            }
-            steps {
-                echo 'Test stage...'
-                sh '''
-                    npm install serve
-                    node_modules/.bin/serve -s build & sleep 10
-                    npx playwright test --config=playwright.config.js --reporter=html
-                '''
-            }
-        }
     }
     post {
         always {
