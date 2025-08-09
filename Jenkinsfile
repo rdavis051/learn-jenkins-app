@@ -14,7 +14,7 @@ pipeline {
                     ls -la
                     node --version
                     npm --version
-                    npm ci
+                    npm cic
                     npm run build
                     ls -la
                 '''
@@ -34,6 +34,23 @@ pipeline {
                     echo "build/index.html exists"
                     ls -l build/index.html
                     npm test
+                '''
+            }
+        }
+
+        stage('End-to-End Test') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy' // Use Playwright image
+                    reuseNode true // Reuse the node for subsequent stages
+                }
+            }
+            steps {
+                echo 'Test stage...'
+                sh '''
+                    npm install -g serve
+                    serve -s build
+                    npx playwright test --config=playwright.config.js --reporter=junit
                 '''
             }
         }
