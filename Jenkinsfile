@@ -50,7 +50,10 @@ pipeline {
                 sh '''
                     npm install serve
                     node_modules/.bin/serve -s build & sleep 10
-                    npx playwright test --config=playwright.config.js --reporter=junit
+                    npx playwright test --config=playwright.config.js --reporter=html, junit
+                    echo "Playwright tests completed"
+                    ls -la jest-results
+                    ls -la jest-results/junit.xml
                 '''
             }
         }
