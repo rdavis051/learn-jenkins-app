@@ -57,7 +57,7 @@ pipeline {
     }
     post {
         always {
-            junit 'test-results/junit.xml' // Adjust path as necessary
+            junit 'jest-results/junit.xml' // Adjust path as necessary
         }
         success {
             echo 'Build and test succeeded!'
