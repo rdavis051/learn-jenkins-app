@@ -102,6 +102,15 @@ pipeline {
             }
         }
 
+        stage('Approval') {
+            // This stage waits for manual approval before deploying to production
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    input message: 'Ready to deploy?', ok: 'Yes, I am sure I want to deploy!'
+                }
+            }
+        }
+        
         stage('Deploy prod') {
             // This stage deploys the built application to Netlify
             agent {
