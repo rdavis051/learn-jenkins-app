@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-    environment {
+    environment { 
         NETLIFY_SITE_ID = '5676adf2-63ab-4059-8e1b-1fce7cf4b4da'
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
     }
@@ -9,6 +9,7 @@ pipeline {
     stages {
 
         stage('Build') {
+            // This stage builds the application using Node.js in a Docker container
             agent {
                 docker {
                     image 'node:18-alpine'
@@ -28,6 +29,7 @@ pipeline {
         }
 
         stage('Tests') {
+            // This stage runs unit tests and end-to-end tests in parallel
             parallel {
                 stage('Unit tests') {
                     agent {
@@ -50,7 +52,8 @@ pipeline {
                     }
                 }
 
-                stage('end-to-end tests') {
+                stage('E2E tests') {
+                    // This stage runs Playwright tests against the built application 
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
@@ -77,6 +80,7 @@ pipeline {
         }
 
         stage('Deploy') {
+            // This stage deploys the built application to Netlify
             agent {
                 docker {
                     image 'node:18-alpine'
