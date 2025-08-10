@@ -50,7 +50,7 @@ pipeline {
                     }
                 }
 
-                stage('E2E') {
+                stage('end-to-end tests') {
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
