@@ -46,6 +46,7 @@ pipeline {
                         '''
                     }
                     post {
+                        // Publish the JUnit test results
                         always {
                             junit 'jest-results/junit.xml'
                         }
@@ -71,6 +72,7 @@ pipeline {
                     }
 
                     post {
+                        // Publish the Playwright HTML report
                         always {
                             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                         }
