@@ -82,7 +82,7 @@ pipeline {
             }
         }
 
-        stage('Deploy stageing') {
+        stage('Deploy Staging') {
             // This stage deploys the built application to Netlify
             agent {
                 docker {
@@ -111,7 +111,7 @@ pipeline {
             }
         }
 
-        stage('Deploy prod') {
+        stage('Deploy Prod') {
             // This stage deploys the built application to Netlify
             agent {
                 docker {
