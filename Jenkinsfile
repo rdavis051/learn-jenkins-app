@@ -116,6 +116,7 @@ pipeline {
             }
 
             steps {
+                // Run Playwright tests against the production URL
                 sh '''
                     npx playwright test  --reporter=html
                 '''
