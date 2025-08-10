@@ -82,7 +82,27 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy stageing') {
+            // This stage deploys the built application to Netlify
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                // Install Netlify CLI and deploy to staging. Removing the --prod flag to deploy to staging
+                sh '''
+                    npm install netlify-cli@20.1.1
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build
+                '''
+            }
+        }
+
+        stage('Deploy prod') {
             // This stage deploys the built application to Netlify
             agent {
                 docker {
