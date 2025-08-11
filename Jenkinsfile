@@ -100,12 +100,6 @@ pipeline {
                     node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
                     node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
                 '''
-
-                script {
-                    // Capture the staging URL from the deploy output
-                    def deployOutput = readJSON file: 'deploy-output.json'
-                    env.STAGING_URL = deployOutput.deploy_url
-                }
             }
         }
 
@@ -120,7 +114,7 @@ pipeline {
 
             environment { 
                 // Set the environment variable for the production URL
-                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
+                CI_ENVIRONMENT_URL = 'https://neon-speculoos-456a4d.netlify.app'
             }
 
             steps {
