@@ -9,6 +9,17 @@ pipeline {
 
     stages {
 
+        stage('Docker') {
+            // This stage builds the Docker image for the application
+            steps {
+                sh '''
+                    echo "Building Docker image"
+                    docker build -t my-playwright .
+                    docker images
+                '''
+            }
+        }
+
         stage('Build') {
             // This stage builds the application using Node.js in a Docker container
             agent {
