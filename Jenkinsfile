@@ -98,19 +98,24 @@ pipeline {
             // This stage deploys the built application to Netlify
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'my-playwright'
                     reuseNode true
                 }
             }
+
+            environment {
+                CI_ENVIRONMENT_URL = "STAGING_URL_TO_BE_SET" // Set the staging URL for the environment
+            }
+
             steps {
                 // Install Netlify CLI and deploy to staging. Removing the --prod flag to deploy to staging
                 sh '''
-                    npm install netlify-cli@20.1.1 node-jq
-                    node_modules/.bin/netlify --version
+                    netlify --version
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
-                    node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
+                    netlify status
+                    netlify deploy --dir=build --json > deploy-output.json
+                    CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json)
+                    npx playwrite test --reporter=html
                 '''
                 script {
                     // Extract the deploy URL from the JSON output
@@ -161,17 +166,22 @@ pipeline {
             // This stage deploys the built application to Netlify
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'my-playwright'
                     reuseNode true
                 }
             }
+
+            environment {
+                CI_ENVIRONMENT_URL = "https://neon-speculoos-456a4d.netlify.app" // Set the production URL for the environment
+            }
             steps {
                 sh '''
-                    npm install netlify-cli@20.1.1
-                    node_modules/.bin/netlify --version
+                    node --version
+                    netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --prod
+                    netlify status
+                    netlify deploy --dir=build --prod
+                    npx playwright test --reporter=html
                 '''
             }
         }
