@@ -17,11 +17,13 @@ pipeline {
                 }
             }
             steps {
-                // This stage installs the AWS CLI and configures it with the provided credentials
-                sh '''
-                    echo "Installing AWS CLI"
-                    aws --version
-                '''
+                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "Installing AWS CLI"
+                        aws --version
+                        aws s3 ls
+                    '''                    
+                }
             }
         }
 
