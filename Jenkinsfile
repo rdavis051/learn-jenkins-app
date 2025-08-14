@@ -9,6 +9,22 @@ pipeline {
 
     stages {
 
+        stage('AWS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    args "--entrypoint=''"
+                }
+            }
+            steps {
+                // This stage installs the AWS CLI and configures it with the provided credentials
+                sh '''
+                    echo "Installing AWS CLI"
+                    aws --version
+                '''
+            }
+        }
+
         stage('Docker') {
             // This stage builds the Docker image for the application
             steps {
