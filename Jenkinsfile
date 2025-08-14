@@ -23,7 +23,7 @@ pipeline {
                         aws --version
                         aws s3 ls
                         echo "Uploading file to S3!" > index.html
-                        echo "Uploading index.html to S3 bucket learn-jenkins-202508132
+                        echo "Uploading index.html to S3 bucket learn-jenkins-202508132"
                         aws s3 cp index.html s3://learn-jenkins-202508132249/index.html
                     '''                    
                 }
