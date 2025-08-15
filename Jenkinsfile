@@ -9,30 +9,6 @@ pipeline {
 
     stages {
 
-        stage('AWS') {
-            agent {
-                docker {
-                    image 'amazon/aws-cli'
-                    args "--entrypoint=''"
-                }
-            }
-            environment {
-                // Set the AWS credentials for the S3 bucket
-                AWS_S3_BUCKET = 'learn-jenkins-202508132249'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''
-                        echo "Installing AWS CLI"
-                        aws --version
-                        aws s3 ls
-                        echo "<h1><center>Uploading file to S3!</center><h1>" > index.html
-                        aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
-                    '''                    
-                }
-            }
-        }
-
         stage('Build') {
             // This stage builds the application using Node.js in a Docker container
             agent {
@@ -51,6 +27,28 @@ pipeline {
                     npm run build
                     ls -la
                 '''
+            }
+        }
+        stage('AWS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    args "--entrypoint=''"
+                }
+            }
+            environment {
+                // Set the AWS credentials for the S3 bucket
+                AWS_S3_BUCKET = 'learn-jenkins-202508132249'
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "Connecting to AWS via AWS CLI"
+                        aws --version
+                        aws s3 ls
+                        aws s3 sync build s3://$AWS_S3_BUCKET
+                    '''                    
+                }
             }
         }
 
