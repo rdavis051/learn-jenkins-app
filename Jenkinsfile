@@ -33,6 +33,10 @@ pipeline {
             agent {
                 docker {
                     image 'amazon/aws-cli'
+                    reuseNode true
+                    // Use the AWS CLI image to interact with AWS services
+                    // Use the --entrypoint='' to avoid running the default entrypoint of the image
+                    // This allows us to run the AWS CLI commands directly
                     args "--entrypoint=''"
                 }
             }
@@ -46,7 +50,7 @@ pipeline {
                         echo "Connecting to AWS via AWS CLI"
                         aws --version
                         aws s3 ls
-                        aws s3 sync build s3://$AWS_S3_BUCKET
+                        aws s3 sync build s3://$AWS_S3_BUCKET                    
                     '''                    
                 }
             }
