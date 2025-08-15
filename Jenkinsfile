@@ -26,21 +26,10 @@ pipeline {
                         echo "Installing AWS CLI"
                         aws --version
                         aws s3 ls
-                        echo "<h1><c>Uploading file to S3!</c><h1>" > index.html
+                        echo "<h1><center>Uploading file to S3!</center><h1>" > index.html
                         aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
                     '''                    
                 }
-            }
-        }
-
-        stage('Docker') {
-            // This stage builds the Docker image for the application
-            steps {
-                sh '''
-                    echo "Building Docker image"
-                    docker build -t my-playwright .
-                    docker images
-                '''
             }
         }
 
