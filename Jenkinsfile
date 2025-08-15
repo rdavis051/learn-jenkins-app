@@ -29,33 +29,7 @@ pipeline {
                 '''
             }
         }
-        stage('AWS') {
-            agent {
-                docker {
-                    image 'amazon/aws-cli'
-                    reuseNode true
-                    // Use the AWS CLI image to interact with AWS services
-                    // Use the --entrypoint='' to avoid running the default entrypoint of the image
-                    // This allows us to run the AWS CLI commands directly
-                    args "--entrypoint=''"
-                }
-            }
-            environment {
-                // Set the AWS credentials for the S3 bucket
-                AWS_S3_BUCKET = 'learn-jenkins-202508132249'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''
-                        echo "Connecting to AWS via AWS CLI"
-                        aws --version
-                        aws s3 ls
-                        aws s3 sync build s3://$AWS_S3_BUCKET                    
-                    '''                    
-                }
-            }
-        }
-
+        
         stage('Tests') {
             // This stage runs unit tests and end-to-end tests in parallel
             parallel {
@@ -171,6 +145,33 @@ pipeline {
             steps {
                 timeout(time: 15, unit: 'MINUTES') {
                     input message: 'Do you wish to deploy to production?', ok: 'Yes, I am sure I want to deploy!'
+                }
+            }
+        }
+
+        stage('AWS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    reuseNode true
+                    // Use the AWS CLI image to interact with AWS services
+                    // Use the --entrypoint='' to avoid running the default entrypoint of the image
+                    // This allows us to run the AWS CLI commands directly
+                    args "--entrypoint=''"
+                }
+            }
+            environment {
+                // Set the AWS credentials for the S3 bucket
+                AWS_S3_BUCKET = 'learn-jenkins-202508132249'
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "Connecting to AWS via AWS CLI"
+                        aws --version
+                        aws s3 ls
+                        aws s3 sync build s3://$AWS_S3_BUCKET                    
+                    '''                    
                 }
             }
         }
