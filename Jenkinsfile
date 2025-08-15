@@ -26,7 +26,7 @@ pipeline {
                         echo "Installing AWS CLI"
                         aws --version
                         aws s3 ls
-                        echo "Uploading file to S3!" > index.html
+                        echo "<h1><c>Uploading file to S3!</c><h1>" > index.html
                         aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
                     '''                    
                 }
