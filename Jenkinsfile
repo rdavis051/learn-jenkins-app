@@ -26,7 +26,7 @@ pipeline {
                         echo "Connecting to AWS via AWS CLI"
                         aws --version
                         aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json   
-                        aws ecs update-service --cluster LearnJenkinsApp-Cluster-Prod --service LearnJenkinsApp-Cluster-Prod --task-definition LearnJenkinsApp-TaskDefinition-Prod:2
+                        aws ecs update-service --cluster LearnJenkinsApp-Cluster-Prod --service LearnJenkinsApp-TaskDefinition-Prod-service-2veot5a5 --task-definition LearnJenkinsApp-TaskDefinition-Prod:2
                     '''                    
                 }
             }
