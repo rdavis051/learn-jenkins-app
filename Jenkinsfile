@@ -2,12 +2,34 @@ pipeline {
     agent any
 
     environment { 
-        NETLIFY_SITE_ID = '5676adf2-63ab-4059-8e1b-1fce7cf4b4da'
-        NETLIFY_AUTH_TOKEN = credentials('netlify-token')
         REACT_APP_VERSION = "1.0.${BUILD_ID}" // Set the version dynamically based on the build number
+        AWS_DEFAULT_REGION = 'us-east-1' // Set your AWS region
     }
 
     stages {
+
+        stage('Deploy to AWS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    reuseNode true
+                    // Use the AWS CLI image to interact with AWS services
+                    // Use the --entrypoint='' to avoid running the default entrypoint of the image
+                    // This allows us to run the AWS CLI commands directly
+                    args "--entrypoint=''"
+                }
+            }
+
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "Connecting to AWS via AWS CLI"
+                        aws --version
+                        aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json   
+                    '''                    
+                }
+            }
+        }
 
         stage('Build') {
             // This stage builds the application using Node.js in a Docker container
@@ -27,204 +49,6 @@ pipeline {
                     npm run build
                     ls -la
                 '''
-            }
-        }
-        
-        stage('Tests') {
-            // This stage runs unit tests and end-to-end tests in parallel
-            parallel {
-                stage('Unit tests') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
-
-                    steps {
-                        sh '''
-                            #test -f build/index.html
-                            npm test
-                        '''
-                    }
-                    post {
-                        // Publish the JUnit test results
-                        always {
-                            junit 'jest-results/junit.xml'
-                        }
-                    }
-                }
-
-                stage('E2E tests') {
-                    // This stage runs Playwright tests against the built application 
-                    agent {
-                        docker {
-                            image 'my-playwright'
-                            reuseNode true
-                        }
-                    }
-
-                    steps {
-                        sh '''
-                            serve -s build &
-                            sleep 10
-                            npx playwright test  --reporter=html
-                        '''
-                    }
-
-                    post {
-                        // Publish the Playwright HTML report
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright Local', reportTitles: '', useWrapperFileDirectly: true])
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Staging') {
-            // This stage deploys the built application to Netlify
-            agent {
-                docker {
-                    image 'my-playwright'
-                    reuseNode true
-                }
-            }
-
-            environment {
-                CI_ENVIRONMENT_URL = "STAGING_URL_TO_BE_SET" // Set the staging URL for the environment
-            }
-
-            steps {
-                // Install Netlify CLI and deploy to staging. Removing the --prod flag to deploy to staging
-                sh '''
-                    netlify --version
-                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    netlify status
-                    netlify deploy --dir=build --json > deploy-output.json
-                    CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json)
-                '''
-                script {
-                    // Extract the deploy URL from the JSON output
-                    env.STAGING_URL = sh(script: "node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
-                }   
-            }
-        }
-
-        stage('Staging E2E') {
-            // This stage runs Playwright tests against the built application in production
-            agent {
-                docker {
-                    image 'my-playwright'
-                    reuseNode true
-                }
-            }
-
-            environment { 
-                // Set the environment variable for the production URL
-                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
-            }
-
-            steps {
-                // Run Playwright tests against the production URL
-                sh '''
-                    npx playwright test  --reporter=html
-                '''
-            }
-
-            post {
-                // Publish the Playwright HTML report
-                always {
-                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Stageing E2E', reportTitles: '', useWrapperFileDirectly: true])
-                }
-            }
-        }
-
-        stage('Approval') {
-            // This stage waits for manual approval before deploying to production
-            steps {
-                timeout(time: 15, unit: 'MINUTES') {
-                    input message: 'Do you wish to deploy to production?', ok: 'Yes, I am sure I want to deploy!'
-                }
-            }
-        }
-
-        stage('AWS') {
-            agent {
-                docker {
-                    image 'amazon/aws-cli'
-                    reuseNode true
-                    // Use the AWS CLI image to interact with AWS services
-                    // Use the --entrypoint='' to avoid running the default entrypoint of the image
-                    // This allows us to run the AWS CLI commands directly
-                    args "--entrypoint=''"
-                }
-            }
-            environment {
-                // Set the AWS credentials for the S3 bucket
-                AWS_S3_BUCKET = 'learn-jenkins-202508132249'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''
-                        echo "Connecting to AWS via AWS CLI"
-                        aws --version
-                        aws s3 ls
-                        aws s3 sync build s3://$AWS_S3_BUCKET                    
-                    '''                    
-                }
-            }
-        }
-
-        stage('Deploy Prod') {
-            // This stage deploys the built application to Netlify
-            agent {
-                docker {
-                    image 'my-playwright'
-                    reuseNode true
-                }
-            }
-
-            environment {
-                CI_ENVIRONMENT_URL = "https://neon-speculoos-456a4d.netlify.app" // Set the production URL for the environment
-            }
-            steps {
-                sh '''
-                    node --version
-                    netlify --version
-                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    netlify status
-                    netlify deploy --dir=build --prod
-                '''
-            }
-        }
-
-        stage('Prod E2E') {
-            // This stage runs Playwright tests against the built application in production
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                    reuseNode true
-                }
-            }
-
-            environment { 
-                // Set the environment variable for the production URL
-                CI_ENVIRONMENT_URL = 'https://neon-speculoos-456a4d.netlify.app'
-            }
-
-            steps {
-                // Run Playwright tests against the production URL
-                sh '''
-                    npx playwright test  --reporter=html
-                '''
-            }
-
-            post {
-                // Publish the Playwright HTML report
-                always {
-                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod E2E', reportTitles: '', useWrapperFileDirectly: true])
-                }
             }
         }
     }
