@@ -7,6 +7,8 @@
         {
             "name": "learnjenkinsapp-container",
             "image": "nginx:1.27-alpine",
+            "cpu": 256,
+            "memory": 512,
             "portMappings": [
                 {
                     "name": "nginx-80-tip",
