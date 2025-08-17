@@ -36,7 +36,7 @@ pipeline {
             // This stage builds the Docker image for the application
             agent {
                 docker {
-                    image 'amazon/aws-cli'
+                    image 'my-aws-cli'
                     reuseNode true
                     // Use the AWS CLI image to interact with AWS services
                     // Use the --entrypoint='' to avoid running the default entrypoint of the image
@@ -57,7 +57,7 @@ pipeline {
         stage('Deploy to AWS') {
             agent {
                 docker {
-                    image 'amazon/aws-cli'
+                    image 'my-aws-cli'
                     reuseNode true
                     // Use the AWS CLI image to interact with AWS services
                     // Use the --entrypoint='' to avoid running the default entrypoint of the image
@@ -71,7 +71,6 @@ pipeline {
                     sh '''
                         echo "Connecting to AWS via AWS CLI"
                         aws --version
-                        yum install -y jq
                         LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
                         echo $LATEST_TD_REVISION
                         aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE_PROD --task-definition $AWS_ECS_TD_PROD:${LATEST_TD_REVISION}
