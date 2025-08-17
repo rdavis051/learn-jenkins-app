@@ -8,7 +8,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Building Docker image"
-                    docker build -t my-playwright .
+                    docker build -f ci/Dockerfile -t my-playwright .
                     docker images
                 '''
             }
