@@ -7,7 +7,7 @@ pipeline {
             // This stage builds the Docker image for the application
             steps {
                 sh '''
-                    echo "Building Docker image"
+                    echo "Building Docker Images"
                     docker build -f ci/Dockerfile-playwright -t my-playwright .
                     docker build -f ci/Dockerfile-aws-cli -t my-aws-cli .
                     docker images
