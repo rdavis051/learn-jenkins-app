@@ -34,9 +34,20 @@ pipeline {
 
         stage('Build Docker Image') {
             // This stage builds the Docker image for the application
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    reuseNode true
+                    // Use the AWS CLI image to interact with AWS services
+                    // Use the --entrypoint='' to avoid running the default entrypoint of the image
+                    // This allows us to run the AWS CLI commands directly
+                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
+                }
+            }
             steps {
                 sh '''
                     echo "Building Docker image"
+                    amazon-linux-extras install docker -y
                     docker build -t myjenkinsapp .
                     docker images
                 '''
