@@ -16,7 +16,7 @@ pipeline {
                     // Use the AWS CLI image to interact with AWS services
                     // Use the --entrypoint='' to avoid running the default entrypoint of the image
                     // This allows us to run the AWS CLI commands directly
-                    args "--entrypoint=''"
+                    args "-u root --entrypoint=''"
                 }
             }
 
@@ -25,8 +25,10 @@ pipeline {
                     sh '''
                         echo "Connecting to AWS via AWS CLI"
                         aws --version
-                        aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json   
-                        aws ecs update-service --cluster LearnJenkinsApp-Cluster-Prod --service LearnJenkinsApp-TaskDefinition-Prod-service-2veot5a5 --task-definition LearnJenkinsApp-TaskDefinition-Prod:2
+                        yum install -y jq
+                        LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
+                        echo $LATEST_TD_REVISION
+                        aws ecs update-service --cluster LearnJenkinsApp-Cluster-Prod --service LearnJenkinsApp-TaskDefinition-Prod-service-2veot5a5 --task-definition LearnJenkinsApp-TaskDefinition-Prod:${LATEST_TD_REVISION}
                     '''                    
                 }
             }
