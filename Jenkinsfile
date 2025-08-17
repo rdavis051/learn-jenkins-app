@@ -48,7 +48,6 @@ pipeline {
                 sh '''
                     echo "Building Docker image"
                     yum install -y docker
-                    service docker start
                     docker build -t myjenkinsapp .
                     docker images
                 '''
