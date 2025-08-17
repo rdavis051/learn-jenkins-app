@@ -47,8 +47,8 @@ pipeline {
             steps {
                 sh '''
                     echo "Building Docker image"
-                    yum install -y amazon-linux-extras
-                    amazon-linux-extras install docker -y
+                    yum install -y docker
+                    service docker start
                     docker build -t myjenkinsapp .
                     docker images
                 '''
