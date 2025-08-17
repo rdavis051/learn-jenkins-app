@@ -62,7 +62,7 @@ pipeline {
                     // Use the AWS CLI image to interact with AWS services
                     // Use the --entrypoint='' to avoid running the default entrypoint of the image
                     // This allows us to run the AWS CLI commands directly
-                    args "-u root --entrypoint=''"
+                    args "--entrypoint=''"
                 }
             }
 
