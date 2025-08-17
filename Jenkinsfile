@@ -3,6 +3,7 @@ pipeline {
 
     environment { 
         REACT_APP_VERSION = "1.0.${BUILD_ID}" // Set the version dynamically based on the build number
+        APP_NAME = 'learnjenkinsapp' // Name of the application
         AWS_DEFAULT_REGION = 'us-east-1' // Set your AWS region
         AWS_ECS_CLUSTER = 'LearnJenkinsApp-Cluster-Prod' // Specify your ECS cluster name
         AWS_ECS_SERVICE_PROD = 'LearnJenkinsApp-TaskDefinition-Prod-service-2veot5a5' // Specify your ECS service name
@@ -48,7 +49,7 @@ pipeline {
                 sh '''
                     echo "Building Docker image"
                     yum install -y docker
-                    docker build -t myjenkinsapp .
+                    docker build -t $APP_NAME:$REACT_APP_VERSION .
                     docker images
                 '''
             }
