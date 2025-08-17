@@ -5,6 +5,7 @@ pipeline {
         REACT_APP_VERSION = "1.0.${BUILD_ID}" // Set the version dynamically based on the build number
         APP_NAME = 'learnjenkinsapp' // Name of the application
         AWS_DEFAULT_REGION = 'us-east-1' // Set your AWS region
+        AWS_DOCKER_REGISTRY = '814753619063.dkr.ecr.us-east-1.amazonaws.com' // Specify your ECR repository
         AWS_ECS_CLUSTER = 'LearnJenkinsApp-Cluster-Prod' // Specify your ECS cluster name
         AWS_ECS_SERVICE_PROD = 'LearnJenkinsApp-TaskDefinition-Prod-service-2veot5a5' // Specify your ECS service name
         AWS_ECS_TD_PROD = 'LearnJenkinsApp-TaskDefinition-Prod' // Specify your ECS task definition name
@@ -46,12 +47,16 @@ pipeline {
                 }
             }
             steps {
-                sh '''
-                    echo "Building Docker image"
-                    yum install -y docker
-                    docker build -t $APP_NAME:$REACT_APP_VERSION .
-                    docker images
-                '''
+                withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "Building Docker image"
+                        yum install -y docker
+                        docker build -t $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION .
+                        aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_DOCKER_REGISTRY
+                        docker push $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION
+                        docker images
+                    '''
+                }
             }
         }
 
@@ -68,7 +73,7 @@ pipeline {
             }
 
             steps {
-                withCredentials([usernamePassword(credentialsId: 'my-aws-s3', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
                         echo "Connecting to AWS via AWS CLI"
                         aws --version
