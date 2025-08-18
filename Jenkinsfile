@@ -53,9 +53,8 @@ pipeline {
                         yum install -y docker
                         aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_DOCKER_REGISTRY
                         docker build -t $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION .
-                        docker tag $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION $AWS_DOCKER_REGISTRY/$APP_NAME:latest
                         echo "Pushing Docker image to ECR"
-                        docker push $AWS_DOCKER_REGISTRY/$APP_NAME:latest
+                        docker push $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION
                         docker images
                     '''
                 }
